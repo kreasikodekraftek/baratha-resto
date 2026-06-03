@@ -127,6 +127,15 @@
                                         <td>{{ number_format($penjualan->room_charge, 0, ',', '.') }}</td>
                                     </tr>
                                 @endif
+                                @if ($penjualan->service_charge > 0)
+                                    <tr>
+                                        <td colspan='4' class='text-center'>Service Charge(10%)</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>{{ number_format($penjualan->service_charge, 0, ',', '.') }}</td>
+                                    </tr>
+                                @endif
                             </tbody>
                             <tfoot class='bg-dark text-white'>
                                 <tr>
@@ -134,7 +143,7 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <td>{{ number_format($penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge, 0, ',', '.') }}
+                                    <td>{{ number_format($penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge + $penjualan->service_charge, 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -153,7 +162,7 @@
                         <input type="hidden" name="temp_ppn" id="temp_ppn" value="{{ $penjualan->total_ppn }}">
                         <input type="hidden" name="new_ppn" id="new_ppn" value="{{ $penjualan->total_ppn }}">
                         <input type="hidden" name="" id="temp_grand_total"
-                            value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge }}"
+                            value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge + $penjualan->service_charge }}"
                             readonly>
                         <?php
                     if($_GET['tab']=='normal'){
@@ -161,7 +170,7 @@
                         <input type="hidden" name='tipeBill' value='normal'>
                         <div class="row" id='normal-payment'>
                             <input type="hidden" name="total" id="total" class="form-control"
-                                value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge }}"
+                                value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge + $penjualan->service_charge }}"
                                 readonly>
                             <div class="col-4 mb-2">
                                 <label for=""><strong>Diskon(%)</strong></label>
@@ -258,11 +267,11 @@
                             </div>
                             <div class="col-md-4 mt-4">
                                 <h1 class='text-dark'>Grand Total : Rp. <span class="text-orange"
-                                        id='idrGrandTotal'>{{ number_format($penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge, 0, ',', '.') }}</span>
+                                        id='idrGrandTotal'>{{ number_format($penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge + $penjualan->service_charge, 0, ',', '.') }}</span>
                                 </h1>
                                 <input type="hidden" name="grand_total" id="grand_total"
                                     class="form-control form-line text-lg text-orange font-weight-bold"
-                                    value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge }}">
+                                    value="{{ $penjualan->total_harga - $penjualan->total_diskon + $penjualan->total_ppn + $penjualan->room_charge + $penjualan->service_charge }}">
                             </div>
                             <div class="col-md-3 mt-3">
                                 <button type="submit" class="btn btn-primary"><span class="fa fa-save"></span>
@@ -309,7 +318,8 @@
                                     @endforeach
                                 </div>
                                 <div class="table-responsive">
-                                    <table class="table table-striped table-hover" id="table-menu-bill">
+                                    <table class="table table-striped table-hover" id="table-menu-bill"
+                                        data-service-charge="{{ $penjualan->jenis_order == 'Dine In' && $penjualan->jenis_tamu == 'Asing' ? 1 : 0 }}">
                                         <thead>
                                             <tr>
                                                 <th>Kode Menu</th>
@@ -336,6 +346,12 @@
                                                 <td colspan='5'>PPN(10%)</td>
                                                 <td id='tfootPpn'></td>
                                             </tr>
+                                            @if ($penjualan->jenis_order == 'Dine In' && $penjualan->jenis_tamu == 'Asing')
+                                                <tr>
+                                                    <td colspan='5'>Service Charge(10%)</td>
+                                                    <td id='tfootServiceCharge'></td>
+                                                </tr>
+                                            @endif
                                             <tr>
                                                 <td colspan='5'>TOTAL</td>
                                                 <td id='tfootTotal'></td>

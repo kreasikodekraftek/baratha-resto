@@ -218,12 +218,17 @@ class PenjualanController extends Controller
         // $totalPpn = $total * 10 / 100;
         $room_charge = 0;
 
+        $jenis_tamu = $request->get('jenis_order') == 'Dine In' ? $request->get('jenis_tamu') : null;
+        $service_charge = ($request->get('jenis_order') == 'Dine In' && $jenis_tamu == 'Asing') ? $total * 10 / 100 : 0;
+
         $newPenjualan = new Penjualan;
         $newPenjualan->kode_penjualan = $request->get('kode_penjualan');
         $newPenjualan->nama_customer = $request->get('nama_customer');
         $newPenjualan->no_hp = $request->get('no_hp');
         $newPenjualan->id_meja = $request->get('id_meja');
         $newPenjualan->jenis_order = $request->get('jenis_order');
+        $newPenjualan->jenis_tamu = $jenis_tamu;
+        $newPenjualan->service_charge = $service_charge;
         $newPenjualan->jumlah_item = count($_POST['kode_menu']);
         $newPenjualan->status_bayar = 'Belum Bayar';
         $newPenjualan->jumlah_qty = $ttlQty;
@@ -433,12 +438,18 @@ class PenjualanController extends Controller
         } else {
             $nomor_kamar = NULL;
         }
+
+        $jenis_tamu = $_POST['jenis_order'] == 'Dine In' ? ($_POST['jenis_tamu'] ?? null) : null;
+        $service_charge = ($_POST['jenis_order'] == 'Dine In' && $jenis_tamu == 'Asing') ? $total * 10 / 100 : 0;
+
         Penjualan::where('kode_penjualan', $kodePenjualan)
             ->update([
                 'nama_customer' => $_POST['nama_customer'],
                 'no_hp' => $_POST['no_hp'],
                 'id_meja' => $_POST['id_meja'],
                 'jenis_order' => $_POST['jenis_order'],
+                'jenis_tamu' => $jenis_tamu,
+                'service_charge' => $service_charge,
                 'jumlah_item' => count($_POST['kode_menu']),
                 'total_harga' => $totalHarga,
                 'total_ppn' => $totalPpn,
@@ -529,6 +540,9 @@ class PenjualanController extends Controller
 
             return redirect()->route('cetak-bill', $kode . '?payment=pay');
         } else {
+            $origin = Penjualan::select('jenis_order', 'jenis_tamu')->where('kode_penjualan', $_POST['kode_penjualan'])->first();
+            $isAsingDineIn = $origin && $origin->jenis_order == 'Dine In' && $origin->jenis_tamu == 'Asing';
+
             $keys = array_keys($_POST['guestQty']);
             $arrKode = [];
             foreach ($keys as $key => $index) {
@@ -537,7 +551,8 @@ class PenjualanController extends Controller
                 $sumQty = array_sum($_POST['guestQty'][$index]); //diskon menu per-guest;
                 $totalAfterDiskon = $totalHarga - $diskonMenu;
                 $ppn = 10 * $totalAfterDiskon / 100;
-                $total = $totalAfterDiskon + $ppn;
+                $service_charge = $isAsingDineIn ? 10 * $totalAfterDiskon / 100 : 0;
+                $total = $totalAfterDiskon + $ppn + $service_charge;
 
                 $diskonPersen = $_POST['diskon'][$index] * $total / 100;
 
@@ -556,6 +571,9 @@ class PenjualanController extends Controller
                     'status_bayar' => 'Sudah Bayar',
                     'total_harga' => $totalHarga,
                     'total_ppn' => $ppn,
+                    'jenis_order' => $origin->jenis_order ?? null,
+                    'jenis_tamu' => $origin->jenis_tamu ?? null,
+                    'service_charge' => $service_charge,
                     'jumlah_qty' => $sumQty,
                     'total_diskon' => $diskonMenu,
                     'total_diskon_tambahan' => $diskonPersen + $_POST['diskon_tambahan'][$index],

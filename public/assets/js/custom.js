@@ -220,6 +220,15 @@ $(document).ready(function() {
 
     $("#jenis_order").change(function() {
         var thisVal = $(this).val();
+        if (thisVal == "Dine In") {
+            $("#wrap_jenis_tamu").show();
+        } else {
+            $("#wrap_jenis_tamu").hide();
+            $("#jenis_tamu").val("Lokal");
+        }
+    });
+    $("#jenis_order").change(function() {
+        var thisVal = $(this).val();
         if (thisVal == "Room Order") {
             $("#nomor_kamar").prop("disabled", false);
             $("#nomor_kamar").attr("required", true);
@@ -1036,7 +1045,14 @@ $(document).ready(function() {
             });
             var sumDiskonSubtotal = sumSubtotal - sumDiskon;
             var ppn = (10 * sumDiskonSubtotal) / 100;
-            var total = sumDiskonSubtotal + ppn;
+            var serviceCharge =
+                $("#table-menu-bill").data("service-charge") == 1
+                    ? (10 * sumDiskonSubtotal) / 100
+                    : 0;
+            var total = sumDiskonSubtotal + ppn + serviceCharge;
+            $("#table-menu-bill tfoot #tfootServiceCharge").html(
+                formatRupiah(serviceCharge)
+            );
             $("#table-menu-bill tfoot #tfootDiskon").html(
                 formatRupiah(sumDiskon)
             );

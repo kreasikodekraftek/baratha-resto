@@ -114,6 +114,17 @@
             </span>
             @enderror
           </div>
+          <div class="col-md-6 mt-3" id="wrap_jenis_tamu" style="{{ old('jenis_order', $penjualan->jenis_order) == 'Dine In' ? '' : 'display:none;' }}">
+            <select name="jenis_tamu" class="form-control form-line @error('jenis_tamu') is-invalid @enderror" id="jenis_tamu">
+              <option value="Lokal" {{old('jenis_tamu', $penjualan->jenis_tamu) == 'Lokal' ? 'selected' : ''}}>Tamu Lokal</option>
+              <option value="Asing" {{old('jenis_tamu', $penjualan->jenis_tamu) == 'Asing' ? 'selected' : ''}}>Tamu Asing (+Service Charge 10%)</option>
+            </select>
+            @error('jenis_tamu')
+            <span class="invalid-feedback" role="alert">
+              <strong>{{ $message }}</strong>
+            </span>
+            @enderror
+          </div>
         </div>
         <h2 class='mt-4'>Keranjang Menu</h2>
         <div class="table-responsive">

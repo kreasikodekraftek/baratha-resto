@@ -14,7 +14,7 @@
 
     $arrKode = explode(",",$kode);
     foreach ($arrKode as $key => $value) {
-        $penjualan = \DB::table('penjualan as p')->select('p.room_charge','p.nama_customer','p.kode_penjualan', 'p.waktu','m.nama_meja','p.total_diskon','p.total_diskon_tambahan','p.bayar','p.kembalian', 'p.jenis_order', 'p.nomor_kamar', 'p.jenis_bayar', 'p.charge')->join('meja as m','p.id_meja','m.id_meja')->where('p.kode_penjualan',$value)->get()[0];
+        $penjualan = \DB::table('penjualan as p')->select('p.room_charge','p.service_charge','p.jenis_tamu','p.nama_customer','p.kode_penjualan', 'p.waktu','m.nama_meja','p.total_diskon','p.total_diskon_tambahan','p.bayar','p.kembalian', 'p.jenis_order', 'p.nomor_kamar', 'p.jenis_bayar', 'p.charge')->join('meja as m','p.id_meja','m.id_meja')->where('p.kode_penjualan',$value)->get()[0];
         $detail = \DB::table('detail_penjualan as dp')->select('dp.diskon','dp.qty','dp.sub_total','m.nama','m.harga_jual','dp.kode_menu')->join('menu as m','dp.kode_menu','m.kode_menu')->where('dp.kode_penjualan', $value)->get();
 
 
@@ -44,7 +44,8 @@
         }
         $ppn = 10*$subtotal/100;
         $room_charge = $penjualan->jenis_order == 'Room Order' ?  10*$subtotal/100 : 0;
-        $total = $subtotal + $ppn + $room_charge;
+        $service_charge = ($penjualan->jenis_order == 'Dine In' && $penjualan->jenis_tamu == 'Asing') ? 10*$subtotal/100 : 0;
+        $total = $subtotal + $ppn + $room_charge + $service_charge;
         $tmpdir = sys_get_temp_dir();
         $file = tempnam($tmpdir, 'ctk');
         $handle = fopen($file, 'w');
@@ -84,6 +85,9 @@
           if ($penjualan->jenis_order == 'Room Order') {
             $Data .= "Room Charge" . str_pad(number_format($room_charge, 0, ",", "."), 37, $spasi, STR_PAD_LEFT) . "\n";
           }
+          if ($service_charge > 0) {
+            $Data .= "Service Charge" . str_pad(number_format($service_charge, 0, ",", "."), 34, $spasi, STR_PAD_LEFT) . "\n";
+          }
           $Data .= "------------------------------------------------\n";
           $Data .= "Total " . str_pad(number_format($total, 0, ",", "."), 42, $spasi, STR_PAD_LEFT) . "\n";
         }
@@ -120,7 +124,7 @@
         $Data .= Chr(29).Chr(86).Chr(49); #Auto Cutter
         fwrite($handle, $Data);
         fclose($handle);
-        copy($file,"//192.168.18.36/Kasir"); # Lakukan cetak
+        if (!app()->environment('local')) { copy($file,"//192.168.18.36/Kasir"); } # Lakukan cetak (skip di lokal)
         unlink($file);
       }
         
